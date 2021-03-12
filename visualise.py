@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 # from nilearn import plotting
 
-def plot_dcc(dcc_file, time_bins=5, save_plot=True):
+def plot_dcc(dcc_file, plot_name, time_bins=5, save_plot=True):
     """plot connectivity matrix from DCC file"""
     # load dcc file 
     dcc_mat = np.load(dcc_file)
@@ -17,7 +17,7 @@ def plot_dcc(dcc_file, time_bins=5, save_plot=True):
     else:
         dcc_proc = dcc_mat
     # plot matrix
-    plot_mat(dcc_proc, save_plot=save_plot)
+    plot_mat(dcc_proc, plot_name=plot_name, save_plot=save_plot)
 
 def plot_mat(dcc_proc, plot_name, save_plot=True):
     """plot matrix"""
