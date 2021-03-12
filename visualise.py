@@ -5,7 +5,7 @@ visualising dcc
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from nilearn import plotting
+# from nilearn import plotting
 
 def plot_dcc(dcc_file, time_bins=5, save_plot=True):
     """plot connectivity matrix from DCC file"""
@@ -19,7 +19,7 @@ def plot_dcc(dcc_file, time_bins=5, save_plot=True):
     # plot matrix
     plot_mat(dcc_proc, save_plot=save_plot)
 
-def plot_mat(dcc_proc, save_plot=True):
+def plot_mat(dcc_proc, plot_name, save_plot=True):
     """plot matrix"""
     fig_num = dcc_proc.shape[0]
     fig, axes = plt.subplots(1,fig_num, figsize=(6*fig_num, 5), facecolor='w')
@@ -31,7 +31,7 @@ def plot_mat(dcc_proc, save_plot=True):
         save_dir = './figs'
         if not os.path.exists(save_dir):
             os.mkdir(save_dir)
-        save_path = os.path.join(save_dir, 'dcc_plot.png')
+        save_path = os.path.join(save_dir, plot_name+'.png')
         plt.savefig(save_path, bbox_inches='tight')
 
 def bin_mat(dcc_mat, time_bins=5):
@@ -53,6 +53,8 @@ def bin_mat(dcc_mat, time_bins=5):
 # running
 if __name__=="__main__":
     # testing a random dcc output file (possible to mean across subjects)
-    dcc_file = '../output/dynamic_corr/s01_creamA_dcc.npy'
-    # plot 4 time bins
-    plot_dcc(dcc_file, time_bins=4)
+    for i in range(1,19):
+        dcc_file = f'../output/dynamic_corr/s{i:02d}_creamA_dcc.npy'
+        # plot 4 time bins
+        plot_name = f's{i:02d}_dcc'
+        plot_dcc(dcc_file, plot_name=plot_name, time_bins=12)
