@@ -5,7 +5,7 @@ visualising dcc
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-# from nilearn import plotting
+from nilearn import plotting
 
 def plot_dcc(dcc_file, plot_name, time_bins=5, save_plot=True):
     """plot connectivity matrix from DCC file"""
