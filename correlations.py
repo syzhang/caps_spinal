@@ -9,13 +9,17 @@ import pandas as pd
 from DCC_GARCH.GARCH import GARCH, garch_loss_gen
 from DCC_GARCH.DCC import DCC, dcc_loss_gen, R_gen
 
-def dynamic_corr_parallel(func_file, max_itr=2, flatten=False):
+def dynamic_corr_parallel(func_file, max_itr=2, whiten=True, flatten=False):
     """calculate garch-dcc"""
     # load txt file
     sj_mat = pd.read_csv(func_file, sep='\t', header=None)
+    sj_mat = sj_mat.to_numpy() # to array
     epsilon_mat = np.empty(sj_mat.shape)
+    # whiten input matrix so that cov=0
+    if whiten:
+        sj_mat = svd_whiten(sj_mat)
     # calculate epsilon for each roi ts
-    for i, col in sj_mat.T.iterrows():
+    for i, col in enumerate(sj_mat.T):
         ts_epsilon = garch_epsilon(col)
         epsilon_mat[:,i] = ts_epsilon
     # calculate dcc output
@@ -24,10 +28,10 @@ def dynamic_corr_parallel(func_file, max_itr=2, flatten=False):
     tmp = func_file.split('/')
     path_name = tmp[:-1]
     file_name = tmp[-1].split('.')[0]
-    save_dir = os.path.join('../output', 'dynamic_corr')
+    save_dir = os.path.join('../output', 'dynamic_corr'+whiten*'_whiten')
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
-    file_name = file_name+'_dcc.npy'
+    file_name = file_name+'_dcc'+whiten*'_whiten'+'.npy'
     output_file = os.path.join(save_dir, file_name)
     np.save(output_file, dcc_sj)
     print(f'dcc output saved to {output_file}')
@@ -62,9 +66,19 @@ def garch_epsilon(t1):
     t1_epsilon = t1/t1_sigma
     return t1_epsilon
 
+def svd_whiten(X):
+    """whitening signal so that cov=0"""
+    U, s, Vt = np.linalg.svd(X, full_matrices=False)
+
+    # U and Vt are the singular matrices, and s contains the singular values.
+    # Since the rows of both U and Vt are orthonormal vectors, then U * Vt
+    # will be white
+    X_white = np.dot(U, Vt)
+
+    return X_white
 
 # running
 if __name__=="__main__":
     # dynamic correlation
     func_file = sys.argv[1]
-    dynamic_corr_parallel(func_file, max_itr=2, flatten=False)
+    dynamic_corr_parallel(func_file, max_itr=2, flatten=False, whiten=True)

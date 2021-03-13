@@ -7,19 +7,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 from nilearn import plotting
 
-def plot_dcc(dcc_file, plot_name, time_bins=5, save_plot=True):
+def plot_dcc(dcc_file, save_name, time_bins=5, save_plot=True):
     """plot connectivity matrix from DCC file"""
-    # load dcc file 
-    dcc_mat = np.load(dcc_file)
+    # load dcc file
+    if type(dcc_file) is str:
+        dcc_mat = np.load(dcc_file)
+    else: # when plotting array directly
+        dcc_mat = dcc_file
     # reduce dcc matrix
     if (time_bins is not None) and (time_bins > 0):
         dcc_proc = bin_mat(dcc_mat, time_bins=time_bins)
     else:
         dcc_proc = dcc_mat
     # plot matrix
-    plot_mat(dcc_proc, plot_name=plot_name, save_plot=save_plot)
+    plot_mat(dcc_proc, save_name=save_name, save_plot=save_plot)
 
-def plot_mat(dcc_proc, plot_name, save_plot=True):
+def plot_mat(dcc_proc, save_name, save_plot=True):
     """plot matrix"""
     fig_num = dcc_proc.shape[0]
     fig, axes = plt.subplots(1,fig_num, figsize=(6*fig_num, 5), facecolor='w')
@@ -31,7 +34,7 @@ def plot_mat(dcc_proc, plot_name, save_plot=True):
         save_dir = './figs'
         if not os.path.exists(save_dir):
             os.mkdir(save_dir)
-        save_path = os.path.join(save_dir, plot_name+'.png')
+        save_path = os.path.join(save_dir, save_name+'.png')
         plt.savefig(save_path, bbox_inches='tight')
 
 def bin_mat(dcc_mat, time_bins=5):
@@ -50,11 +53,28 @@ def bin_mat(dcc_mat, time_bins=5):
         raise ValueError('Time bins not specified or invalid.')
     return dcc_reduced
 
+def mean_subjects(dcc_list):
+    """produce mean acros all subject matrices"""
+    mat_ls = [np.load(f) for f in dcc_list]
+    mat_concat = np.stack(mat_ls)
+    mean_mat = np.mean(mat_concat, axis=0)
+    return mean_mat
+    
+
 # running
 if __name__=="__main__":
     # testing a random dcc output file (possible to mean across subjects)
-    for i in range(1,19):
-        dcc_file = f'../output/dynamic_corr/s{i:02d}_creamA_dcc.npy'
-        # plot 4 time bins
-        plot_name = f's{i:02d}_dcc'
-        plot_dcc(dcc_file, plot_name=plot_name, time_bins=12)
+    dcc_dir = '../output/dynamic_corr'
+    # dcc_dir = '../output/dynamic_corr_whiten'
+    f_ls = []
+    for f in os.listdir(dcc_dir):
+        dcc_file = os.path.join(dcc_dir, f)
+        f_ls.append(dcc_file)
+        # derive fig name
+        save_name = f.split('.')[0]
+        # plot time bins
+        plot_dcc(dcc_file, save_name=save_name, time_bins=10)
+    
+    # plot mean across subjects
+    mean_mat = mean_subjects(f_ls)
+    plot_dcc(mean_mat, save_name='mean_creamA_dcc', time_bins=10)
