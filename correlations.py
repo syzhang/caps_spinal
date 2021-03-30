@@ -26,11 +26,17 @@ def dynamic_corr_parallel(func_file, max_itr=2, whiten=True, flatten=False):
     dcc_sj = dcc_calc(epsilon_mat, max_itr=max_itr, flatten=flatten)
     # save correlation
     tmp = func_file.split('/')
-    path_name = tmp[:-1]
+    path_name = tmp[-2]
+    # condition name
+    if 'rest' in path_name:
+        condition = 'rest'
+    elif 'ramp' in path_name:
+        condition = 'ramp'
+    # file name
     file_name = tmp[-1].split('.')[0]
-    save_dir = os.path.join('../output', 'dynamic_corr'+whiten*'_whiten')
+    save_dir = os.path.join('../output', condition, 'dynamic_corr'+whiten*'_whiten')
     if not os.path.exists(save_dir):
-        os.mkdir(save_dir)
+        os.makedirs(save_dir)
     file_name = file_name+'_dcc'+whiten*'_whiten'+'.npy'
     output_file = os.path.join(save_dir, file_name)
     np.save(output_file, dcc_sj)
