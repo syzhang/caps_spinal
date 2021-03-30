@@ -53,10 +53,31 @@ def bin_mat(dcc_mat, time_bins=5):
         raise ValueError('Time bins not specified or invalid.')
     return dcc_reduced
 
-def mean_subjects(dcc_list):
+def mean_subjects(dcc_list, exclude=True):
     """produce mean acros all subject matrices"""
     mat_ls = [np.load(f) for f in dcc_list]
-    mat_concat = np.stack(mat_ls)
+    # check matrices if they have the same size
+    time_lengths = []
+    for mat in mat_ls:
+        time_lengths.append(mat.shape[0])
+    time_lengths = np.array(time_lengths)
+    subject_check = time_lengths<max(time_lengths)
+    if sum(subject_check) > 0:
+        mat_ls_excluded = []
+        if exclude:
+            for i, mat in enumerate(mat_ls):
+                if mat.shape[0] < max(time_lengths):
+                    print(f'Excluding {dcc_list[i]}')
+                else:
+                    mat_ls_excluded.append(mat)
+            print(f'{len(mat_ls_excluded)} subject matrices remained after exclusion.')
+        else:
+            raise ValueError('Matrices size different, consider exclude subjects.')
+    else: # not excluding
+        mat_ls_excluded = mat_ls
+
+    # stacking matrices and calculate mean
+    mat_concat = np.stack(mat_ls_excluded)
     mean_mat = np.mean(mat_concat, axis=0)
     return mean_mat
     
@@ -64,17 +85,21 @@ def mean_subjects(dcc_list):
 # running
 if __name__=="__main__":
     # testing a random dcc output file (possible to mean across subjects)
-    dcc_dir = '../output/dynamic_corr'
-    # dcc_dir = '../output/dynamic_corr_whiten'
-    f_ls = []
-    for f in os.listdir(dcc_dir):
-        dcc_file = os.path.join(dcc_dir, f)
-        f_ls.append(dcc_file)
-        # derive fig name
-        save_name = f.split('.')[0]
-        # plot time bins
-        plot_dcc(dcc_file, save_name=save_name, time_bins=10)
+    dcc_dir = '../output/'
+    # walk through conditions
+    for condition in os.listdir(dcc_dir):
+        print(f'plotting mean image of condition {condition}')
+        condition_dir = os.path.join(dcc_dir, condition, 'dynamic_corr_whiten')
+        f_ls = []
+        for f in os.listdir(condition_dir):
+            dcc_file = os.path.join(condition_dir, f)
+            f_ls.append(dcc_file)
+            # # uncomment below to plot individuals
+            # # derive fig name
+            # save_name = f.split('.')[0]
+            # # plot time bins
+            # plot_dcc(dcc_file, save_name=save_name, time_bins=10)
     
-    # plot mean across subjects
-    mean_mat = mean_subjects(f_ls)
-    plot_dcc(mean_mat, save_name='mean_creamA_dcc', time_bins=10)
+        # plot mean across subjects
+        mean_mat = mean_subjects(f_ls)
+        plot_dcc(mean_mat, save_name=condition+'_mean', time_bins=20)
