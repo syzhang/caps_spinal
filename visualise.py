@@ -79,6 +79,7 @@ def mean_subjects(dcc_list, exclude=True):
     # stacking matrices and calculate mean
     mat_concat = np.stack(mat_ls_excluded)
     mean_mat = np.mean(mat_concat, axis=0)
+    # print(mean_mat.shape)
     return mean_mat
     
 
@@ -102,4 +103,4 @@ if __name__=="__main__":
     
         # plot mean across subjects
         mean_mat = mean_subjects(f_ls)
-        plot_dcc(mean_mat, save_name=condition+'_mean', time_bins=20)
+        plot_dcc(mean_mat, save_name=condition+'_mean', time_bins=6)
